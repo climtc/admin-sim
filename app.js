@@ -1528,6 +1528,7 @@ function renderSavedResults() {
     });
   });
   renderReviewDetail();
+  renderEvalResults();
 }
 
 // 저장된 결과/사례를 결과 화면으로 불러와 보면서 평가
@@ -1630,6 +1631,53 @@ function renderInlineEvaluation() {
   }
 }
 
+// 평가 결과 보기(이 브라우저). 정적 사이트는 방문자 간 평가를 자동 합산하지 못한다.
+function renderEvalResults() {
+  const host = $("#evalResultsTable");
+  if (!host) return;
+  const evaluated = getSavedResults().filter((s) => s.evaluation && s.evaluation.updatedAt);
+  const scope = $("#evalResultsScope");
+  if (scope) scope.textContent = `${evaluated.length}건 (이 브라우저 저장)`;
+  if (!evaluated.length) {
+    host.innerHTML = `<p class="empty-note">아직 이 브라우저에서 저장한 평가가 없습니다. 사례를 평가하면 여기에 누적됩니다.</p>`;
+    return;
+  }
+  const rubric = RUBRIC_ITEMS;
+  const colAvg = {};
+  rubric.forEach((r) => { colAvg[r.id] = []; });
+  const rows = evaluated.map((s) => {
+    const ev = s.evaluation;
+    const nums = rubric.map((r) => Number(ev.scores?.[r.id])).filter((n) => n > 0);
+    rubric.forEach((r) => { const v = Number(ev.scores?.[r.id]); if (v > 0) colAvg[r.id].push(v); });
+    const avg = nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1) : "-";
+    return `<tr>
+      <td class="er-title">${escapeHtml(s.title)}</td>
+      <td>${escapeHtml(ev.reviewerRole || "-")}</td>
+      ${rubric.map((r) => `<td>${escapeHtml(ev.scores?.[r.id] || "-")}</td>`).join("")}
+      <td><strong>${avg}</strong></td>
+      <td class="er-time">${escapeHtml(new Date(ev.updatedAt).toLocaleString("ko-KR"))}</td>
+    </tr>`;
+  }).join("");
+  const avgRow = `<tr class="er-avg">
+    <td>평균</td><td></td>
+    ${rubric.map((r) => { const a = colAvg[r.id]; return `<td>${a.length ? (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : "-"}</td>`; }).join("")}
+    <td></td><td></td>
+  </tr>`;
+  host.innerHTML = `
+    <div class="eval-results-scroll">
+      <table class="eval-results">
+        <thead><tr>
+          <th>사례</th><th>평가자</th>
+          ${rubric.map((r) => `<th title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</th>`).join("")}
+          <th>평균</th><th>시간</th>
+        </tr></thead>
+        <tbody>${rows}${avgRow}</tbody>
+      </table>
+    </div>
+    <p class="empty-note">이 표는 <strong>이 브라우저에 저장된 평가</strong>입니다. 정적 사이트 특성상 방문자(다른 사람·기기)의 평가는 자동으로 합산·표시되지 않습니다. 전체 공유·합산은 별도 저장 백엔드가 필요합니다.</p>
+  `;
+}
+
 // 저장 목록(02) 페이지: 선택 항목 요약 + 검토·평가 화면 안내(평가 폼은 결과 화면에 인라인)
 function renderReviewDetail() {
   const detail = $("#reviewDetail");
@@ -1669,6 +1717,7 @@ function saveEvaluation(id, formData) {
   queueResearchEvent("evaluation_saved", target);
   renderInlineEvaluation();
   if ($("#caseLibraryList")) renderCaseLibrary();
+  renderEvalResults();
   if (state.page === "review") renderSavedResults();
 }
 
@@ -1870,9 +1919,9 @@ function applyPhase1Ui() {
   const navBrowseSmall = document.querySelector('.nav-button[data-page="simulator"] small');
   if (navBrowseSmall) navBrowseSmall.textContent = "사례를 보며 같은 화면에서 평가";
   const navReview = document.querySelector('.nav-button[data-page="review"] strong');
-  if (navReview) navReview.textContent = "사례 목록";
+  if (navReview) navReview.textContent = "평가 결과";
   const navReviewSmall = document.querySelector('.nav-button[data-page="review"] small');
-  if (navReviewSmall) navReviewSmall.textContent = "업무 사례 선택과 평가 현황";
+  if (navReviewSmall) navReviewSmall.textContent = "지금까지의 평가 결과 보기";
   const savedHead = document.querySelector('#reviewPage .module .module-head h2');
   if (savedHead) savedHead.textContent = "업무 사례 목록";
   // score-card 라벨을 검수 상태로

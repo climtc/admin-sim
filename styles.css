@@ -162,6 +162,66 @@ textarea {
   align-items: center;
 }
 
+/* 평가 결과 표 (이 브라우저) */
+.eval-results-module {
+  margin-bottom: 16px;
+}
+
+.eval-results-scope {
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--muted, #637180);
+}
+
+.eval-results-body {
+  padding: 14px 16px;
+}
+
+.eval-results-scroll {
+  overflow-x: auto;
+}
+
+.eval-results {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.eval-results th,
+.eval-results td {
+  border-bottom: 1px solid var(--line, #cfd9e2);
+  padding: 7px 9px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.eval-results th {
+  background: #f5f8fa;
+  color: #455565;
+  font-weight: 750;
+}
+
+.eval-results .er-title {
+  text-align: left;
+  font-weight: 700;
+  white-space: normal;
+  min-width: 150px;
+}
+
+.eval-results .er-time {
+  color: var(--muted, #637180);
+  font-size: 11px;
+}
+
+.eval-results .er-avg {
+  background: #eef4f8;
+  font-weight: 800;
+}
+
+.eval-results .er-avg td {
+  border-top: 2px solid #c8d6df;
+}
+
 /* 검증자 진행률 칩 (Phase1, 사례 바 우측) */
 .eval-progress {
   margin-left: auto;
