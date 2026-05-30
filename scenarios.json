@@ -1,0 +1,483 @@
+{
+  "version": "2026-05-30.phase1",
+  "build_note": {
+    "phase": "phase1",
+    "generation": "로컬에서 검수·작성된 사례. 원문/허브 데이터는 배포에 포함하지 않음(절대경로·식별정보 제외).",
+    "evidence_note": "evidence 항목은 비식별 업무 유형 참조이며 학교명·인명·원문 경로를 포함하지 않는다."
+  },
+  "domain_catalog": [
+    {"name": "안전보건", "source_count": 4433, "status": "scenario_ready"},
+    {"name": "현장체험학습", "source_count": 4122, "status": "scenario_ready"},
+    {"name": "교육과정", "source_count": 3796, "status": "hub_available_pending_scenario"},
+    {"name": "예산계약", "source_count": 3598, "status": "hub_available_pending_scenario"},
+    {"name": "인사복무", "source_count": 2792, "status": "hub_available_pending_scenario"},
+    {"name": "교무학사", "source_count": 1286, "status": "hub_available_pending_scenario"},
+    {"name": "정보보안", "source_count": 1232, "status": "scenario_ready"},
+    {"name": "학교폭력", "source_count": 1181, "status": "scenario_ready"},
+    {"name": "방과후돌봄", "source_count": 961, "status": "scenario_ready"},
+    {"name": "생활교육", "source_count": 802, "status": "hub_available_pending_scenario"},
+    {"name": "민원정보공개", "source_count": 204, "status": "scenario_ready"}
+  ],
+  "region_policy": {
+    "active": ["전국 공통"],
+    "disabled_until_region_facet": ["경기도", "서울특별시", "부산광역시", "경상남도"],
+    "reason": "현재 허브 요청 모델은 region 값을 보존하지만, hub_text_ready_catalog와 DataHubClient.search는 정규화된 지역 facet으로 필터링하지 않는다."
+  },
+  "recommended_prompts": [
+    {
+      "title": "CCTV 재설치 복합 업무",
+      "domain": "정보보안",
+      "text": "초등학교에서 노후 CCTV를 지능형 CCTV로 재설치하려고 한다. 기존 위치별 촬영 범위, 설치 예고와 의견수렴, 물품선정위원회 또는 선정 사유, K-에듀파인 품의·계약·검수·지출, 개인정보 처리방침과 영상정보처리기기 운영 방침 공개까지 담당자별 업무 순서로 시뮬레이션해줘. 각 단계의 입력자료, 산출문서, 관련 시스템, 결재·협조 지점, 학생 안전·개인정보·예산계약 검토 필요 지점을 구분해줘."
+    },
+    {
+      "title": "현장체험학습 안전·정산",
+      "domain": "현장체험학습",
+      "text": "중학교 2학년 현장체험학습을 준비한다고 가정하고, 기본계획 수립부터 안전교육, 개인정보·동의서 수합, 취약학생 지원 확인, 업체 계약, 당일 운영, 불참자 처리, 결과보고와 정산까지 업무 프로세스를 재구성해줘. 담임교사, 업무담당자, 행정실, 관리자, 외부업체가 각각 언제 어떤 자료를 입력하고 어떤 시스템을 쓰는지 보여줘."
+    },
+    {
+      "title": "정보공개 청구 대응",
+      "domain": "민원정보공개",
+      "text": "학교에 CCTV 설치·운영 현황과 영상정보 열람 기록에 대한 정보공개 청구가 들어온 상황을 가정해줘. 자료보유자 확인, 비공개·부분공개 검토, 개인정보 마스킹, 내부 결재, 청구인 회신, 기록 보존까지 단계별로 정리하고 교사가 직접 관여하는 지점과 행정실·관리자 검토 필요 지점을 분리해줘."
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "cctv_reinstallation_school_site",
+      "title": "학교 영상정보처리기기(CCTV) 재설치",
+      "work_domain": "정보보안",
+      "subdomains": ["안전보건", "예산계약", "시설관리", "개인정보보호"],
+      "school_context": {
+        "school_level": ["초등학교", "중학교", "고등학교", "특수학교"],
+        "region": ["경기도", "전국 공통"],
+        "school_type": ["공립", "사립"]
+      },
+      "keywords": ["CCTV", "영상정보처리기기", "재설치", "개인정보", "보안정책", "시설공사", "위탁", "학교홈페이지"],
+      "prompt_examples": [
+        "학교 안에 있는 CCTV를 재설치해야 해. 누가 무엇을 해야 하는지 알고 싶어.",
+        "영상정보처리기기 교체 공사와 개인정보 처리 방침 공개 절차를 같이 보고 싶어."
+      ],
+      "seed_terms": {
+        "domains": ["정보보안", "안전보건", "예산계약"],
+        "related_systems": ["업무관리", "K-에듀파인", "학교홈페이지", "교육시설통합정보망"],
+        "workflow_stages": ["계획", "안내", "심의결재", "집행", "보고정산", "기록보존"]
+      },
+      "actors": [
+        {"id": "privacy_manager", "name": "개인정보보호 담당자", "role": "영상정보처리기기 운영 방침, 개인정보 영향 요소, 공개 문구를 검토"},
+        {"id": "safety_facility_manager", "name": "안전·시설 담당자", "role": "설치 위치, 사각지대, 공사 범위, 유지관리 조건을 확인"},
+        {"id": "admin_office", "name": "행정실 계약·회계 담당자", "role": "견적, 품의, 계약, 검수, 지출 증빙을 처리"},
+        {"id": "principal", "name": "학교장·관리자", "role": "설치 필요성, 개인정보·안전·예산 리스크, 최종 결재를 확인"},
+        {"id": "vendor", "name": "설치·유지관리 업체", "role": "현장 실사, 견적, 설치, 하자·보안 조치 자료를 제출"}
+      ],
+      "systems": [
+        {"id": "work_management", "name": "업무관리", "functions": ["계획 기안", "검토·협조", "결재", "시행문 보관"]},
+        {"id": "edufine", "name": "K-에듀파인", "functions": ["품의", "계약", "검수", "지출", "증빙 정합성 확인"]},
+        {"id": "homepage", "name": "학교홈페이지", "functions": ["영상정보처리기기 운영 방침 공개", "개인정보 처리방침 링크", "변경 안내"]},
+        {"id": "facility_net", "name": "교육시설통합정보망", "functions": ["시설공사 이력", "하자보수", "시설 점검 자료 연계"]},
+        {"id": "spreadsheet", "name": "스프레드시트", "functions": ["설치 위치 목록", "촬영 범위", "동의·안내 대상", "비교견적 정리"]}
+      ],
+      "tasks": [
+        {
+          "id": "cctv_t01",
+          "phase": "계획",
+          "title": "설치 필요성과 기존 장비 상태 확인",
+          "actor_id": "safety_facility_manager",
+          "system_ids": ["spreadsheet", "work_management"],
+          "inputs": ["기존 CCTV 위치 목록", "고장·노후 민원", "사각지대 또는 안전사고 위험"],
+          "outputs": ["재설치 필요성 메모", "위치별 검토표"],
+          "risk": "medium",
+          "estimated_time": "D+0",
+          "status": "required",
+          "human_review": ["학생 안전", "촬영 범위 적정성"]
+        },
+        {
+          "id": "cctv_t02",
+          "phase": "계획",
+          "title": "촬영 범위와 개인정보 처리 쟁점 검토",
+          "actor_id": "privacy_manager",
+          "system_ids": ["work_management", "homepage"],
+          "inputs": ["촬영 위치", "촬영 목적", "보관 기간", "접근 권한"],
+          "outputs": ["개인정보 검토 의견", "운영 방침 변경 항목"],
+          "risk": "high",
+          "estimated_time": "D+1",
+          "status": "required",
+          "human_review": ["개인정보", "민원 가능성", "최종 승인"]
+        },
+        {
+          "id": "cctv_t03",
+          "phase": "심의결재",
+          "title": "재설치 계획 기안과 관리자 검토",
+          "actor_id": "privacy_manager",
+          "system_ids": ["work_management"],
+          "inputs": ["위치별 검토표", "개인정보 검토 의견", "예상 예산"],
+          "outputs": ["재설치 계획 공문", "협조·결재 이력"],
+          "risk": "high",
+          "estimated_time": "D+2",
+          "status": "required",
+          "human_review": ["최종 승인", "책임 경계"]
+        },
+        {
+          "id": "cctv_t035",
+          "phase": "심의결재",
+          "title": "설치 예고, 의견수렴, 물품선정 검토",
+          "actor_id": "principal",
+          "system_ids": ["work_management", "homepage", "spreadsheet"],
+          "inputs": ["재설치 계획", "촬영 위치", "예상 금액", "물품 선정 기준", "의견수렴 결과"],
+          "outputs": ["설치 예고 또는 안내", "위원회 검토 기록", "선정 사유"],
+          "risk": "high",
+          "estimated_time": "D+2~D+5",
+          "status": "conditional",
+          "human_review": ["민원 가능성", "예산계약", "최종 승인"]
+        },
+        {
+          "id": "cctv_t04",
+          "phase": "집행",
+          "title": "견적 수합, 품의, 계약 처리",
+          "actor_id": "admin_office",
+          "system_ids": ["edufine", "work_management", "spreadsheet"],
+          "inputs": ["견적서", "과업 범위", "예산 항목", "업체 보안 서약 또는 위탁 조건"],
+          "outputs": ["품의서", "계약 문서", "비교견적표"],
+          "risk": "high",
+          "estimated_time": "D+3~D+7",
+          "status": "required",
+          "human_review": ["예산계약", "개인정보 처리 위탁"]
+        },
+        {
+          "id": "cctv_t05",
+          "phase": "집행",
+          "title": "현장 설치와 보안 설정 확인",
+          "actor_id": "vendor",
+          "system_ids": ["facility_net", "spreadsheet"],
+          "inputs": ["계약 범위", "설치 위치", "네트워크·저장장치 설정 기준"],
+          "outputs": ["설치 완료 내역", "보안 설정 확인표", "하자보수 조건"],
+          "risk": "high",
+          "estimated_time": "D+8~D+14",
+          "status": "required",
+          "human_review": ["학생 안전", "정보보안"]
+        },
+        {
+          "id": "cctv_t06",
+          "phase": "보고정산",
+          "title": "검수, 지출, 방침 공개 갱신",
+          "actor_id": "admin_office",
+          "system_ids": ["edufine", "homepage", "work_management"],
+          "inputs": ["설치 완료 내역", "검수조서", "운영 방침 변경안", "계약·세금계산서"],
+          "outputs": ["검수·지출 문서", "홈페이지 공개 화면", "기록 보존 묶음"],
+          "risk": "high",
+          "estimated_time": "D+15~D+20",
+          "status": "required",
+          "human_review": ["예산계약", "개인정보", "최종 승인"]
+        }
+      ],
+      "edges": [
+        {"source": "cctv_t01", "target": "cctv_t02", "type": "checks", "label": "촬영 범위 검토"},
+        {"source": "cctv_t02", "target": "cctv_t03", "type": "requires", "label": "검토 의견 첨부"},
+        {"source": "cctv_t03", "target": "cctv_t035", "type": "checks", "label": "예고·의견수렴"},
+        {"source": "cctv_t035", "target": "cctv_t04", "type": "approves", "label": "선정 후 집행"},
+        {"source": "cctv_t04", "target": "cctv_t05", "type": "contracts", "label": "계약·설치"},
+        {"source": "cctv_t05", "target": "cctv_t06", "type": "produces", "label": "검수·공개"},
+        {"source": "privacy_manager", "target": "cctv_t02", "type": "performs", "label": "담당"},
+        {"source": "admin_office", "target": "cctv_t04", "type": "performs", "label": "담당"},
+        {"source": "principal", "target": "cctv_t035", "type": "reviews", "label": "위원회·검토"},
+        {"source": "homepage", "target": "cctv_t06", "type": "publishes", "label": "공개"}
+      ],
+      "related_work": [
+        {"id": "rel_cctv_01", "title": "개인정보 처리방침 및 영상정보처리기기 운영 방침 갱신", "relation": "parallel", "owner": "개인정보보호 담당자"},
+        {"id": "rel_cctv_02", "title": "정보화기기 유지관리 용역 보안관리", "relation": "preceding_or_parallel", "owner": "정보보안 담당자"},
+        {"id": "rel_cctv_03", "title": "시설공사 계약·검수·하자보수 관리", "relation": "parallel", "owner": "행정실"},
+        {"id": "rel_cctv_04", "title": "학생·학부모 민원 및 안내 대응", "relation": "follow_up", "owner": "담임·생활안전 담당자"},
+        {"id": "rel_cctv_05", "title": "학교 안전점검 및 시설 유지관리 기록", "relation": "follow_up", "owner": "안전·시설 담당자"}
+      ],
+      "bottlenecks": [
+        "촬영 범위가 교실·상담실·휴게공간 등 민감 공간과 겹치면 재검토가 길어질 수 있음",
+        "품의·계약·검수·지출 단계에서 금액, 과업 범위, 보안 조건이 불일치하면 반려 가능성이 큼",
+        "설치 완료 후 홈페이지 공개와 내부 기록 보존이 분리되면 누락 위험이 있음"
+      ],
+      "ai_support": [
+        "위치별 촬영 목적·범위·보관 기간 점검표 생성",
+        "계획서, 개인정보 검토 의견, 홈페이지 공개 문구 초안 생성",
+        "견적·계약·검수·지출 증빙 간 금액·일자·업체명 정합성 점검",
+        "결재 전 누락 서류와 담당자 검토 필요 지점 체크리스트 생성"
+      ],
+      "human_review_boundaries": ["개인정보", "학생 안전", "예산계약", "민원", "최종승인"],
+      "evidence": [
+        {"file_unit_id": "fu_b20bba54bfc05821", "title": "e-4-5__17. 영상정보처리기기 설치 및 운영관리 방침 수립 공개.pdf", "evidence_type": "manual_candidate", "domains": "안전보건;정보보안", "systems": "업무관리", "stages": "집행;기록보존"},
+        {"file_unit_id": "fu_4a9f95896ae1eeb9", "title": "s-4-4__14. 영상정보처리기기(CCTV) 보안정책 일부 변경 안내.pdf", "evidence_type": "public_document", "domains": "정보보안", "systems": "업무관리", "stages": "안내;집행"},
+        {"file_unit_id": "hub_record_cctv_selection", "title": "물품선정위원회 회의 개최(지능형CCTV설치)", "evidence_type": "hub_record_signal", "domains": "정보보안;예산계약", "systems": "K-에듀파인;업무관리", "stages": "의견수렴;위원회;심의결재"},
+        {"file_unit_id": "fu_1b530964acea8c6f", "title": "e-4-4__07. 정보화기기 유지관리 용역 보안관리.pdf", "evidence_type": "manual_candidate", "domains": "정보보안;예산계약", "systems": "K-에듀파인;업무관리", "stages": "계획;집행;보고정산;기록보존"},
+        {"file_unit_id": "fu_3b8821774a2c3c53", "title": "e-4-5__12. 개인정보처리 위탁 계약 체결 및 공개 (2026).pdf", "evidence_type": "manual_candidate", "domains": "교무학사;정보보안;예산계약", "systems": "K-에듀파인;업무관리", "stages": "안내;신청수합;집행;기록보존"},
+        {"file_unit_id": "fu_81a53b7cd457791a", "title": "k-5-4__00. 업무흐름도-개인정보보호.pdf", "evidence_type": "workflow_seed", "domains": "교육과정;교무학사;안전보건;정보보안;예산계약;인사복무", "systems": "K-에듀파인;업무관리;학교홈페이지", "stages": "계획;안내;신청수합;심의결재;집행;보고정산;기록보존"}
+      ]
+    },
+    {
+      "scenario_id": "fieldtrip_safety_settlement",
+      "title": "현장체험학습 안전·정산 업무",
+      "work_domain": "현장체험학습",
+      "subdomains": ["안전보건", "예산계약", "개인정보민원"],
+      "school_context": {
+        "school_level": ["초등학교", "중학교", "고등학교"],
+        "region": ["전국 공통", "경기도"],
+        "school_type": ["공립", "사립"]
+      },
+      "keywords": ["현장체험학습", "안전교육", "동의서", "정산", "계획서", "가정통신문"],
+      "prompt_examples": ["현장체험학습 전후 업무와 정산까지 한 번에 보고 싶어."],
+      "seed_terms": {
+        "domains": ["현장체험학습", "안전보건", "예산계약"],
+        "related_systems": ["업무관리", "K-에듀파인", "학교홈페이지"],
+        "workflow_stages": ["계획", "안내", "신청수합", "심의결재", "집행", "보고정산"]
+      },
+      "actors": [
+        {"id": "trip_teacher", "name": "현장체험학습 담당교사", "role": "계획, 안내, 학생 안전, 정산 자료 수합"},
+        {"id": "homeroom", "name": "담임교사", "role": "동의서·명단·특이사항 수합"},
+        {"id": "admin_office", "name": "행정실", "role": "계약, 지출, 정산 증빙 처리"},
+        {"id": "principal", "name": "학교장", "role": "안전·예산·최종 승인"}
+      ],
+      "systems": [
+        {"id": "work_management", "name": "업무관리", "functions": ["계획 기안", "결재", "결과 보고"]},
+        {"id": "edufine", "name": "K-에듀파인", "functions": ["품의", "계약", "지출", "정산"]},
+        {"id": "spreadsheet", "name": "스프레드시트", "functions": ["명단", "동의서 수합", "금액 계산"]},
+        {"id": "homepage", "name": "학교홈페이지", "functions": ["가정통신문", "안내", "결과 공유"]}
+      ],
+      "tasks": [
+        {"id": "trip_t01", "phase": "계획", "title": "기본계획과 안전계획 작성", "actor_id": "trip_teacher", "system_ids": ["work_management"], "inputs": ["일정", "장소", "위험요소"], "outputs": ["계획서"], "risk": "high", "estimated_time": "D-30", "status": "required", "human_review": ["학생 안전"]},
+        {"id": "trip_t02", "phase": "안내", "title": "가정통신문과 동의서 배포", "actor_id": "homeroom", "system_ids": ["homepage", "spreadsheet"], "inputs": ["안내문", "참가비", "동의 항목"], "outputs": ["동의서 수합표"], "risk": "medium", "estimated_time": "D-21", "status": "required", "human_review": ["개인정보", "민원"]},
+        {"id": "trip_t03", "phase": "집행", "title": "계약·지출 품의 처리", "actor_id": "admin_office", "system_ids": ["edufine", "work_management"], "inputs": ["견적", "참가 인원", "예산"], "outputs": ["품의·계약 문서"], "risk": "high", "estimated_time": "D-14", "status": "required", "human_review": ["예산계약"]},
+        {"id": "trip_t04", "phase": "보고정산", "title": "결과보고와 정산 증빙 정리", "actor_id": "trip_teacher", "system_ids": ["edufine", "work_management", "spreadsheet"], "inputs": ["영수증", "참가자 명단", "불참자"], "outputs": ["결과보고서", "정산서"], "risk": "high", "estimated_time": "D+7", "status": "required", "human_review": ["예산계약", "최종승인"]}
+      ],
+      "edges": [
+        {"source": "trip_t01", "target": "trip_t02", "type": "produces", "label": "안내자료 생성"},
+        {"source": "trip_t02", "target": "trip_t03", "type": "requires", "label": "인원·금액 확정"},
+        {"source": "trip_t03", "target": "trip_t04", "type": "produces", "label": "정산 근거"},
+        {"source": "trip_teacher", "target": "trip_t01", "type": "performs", "label": "담당"},
+        {"source": "admin_office", "target": "trip_t03", "type": "performs", "label": "담당"}
+      ],
+      "related_work": [
+        {"id": "rel_trip_01", "title": "응급환자 대응계획 수립", "relation": "parallel", "owner": "보건·안전 담당자"},
+        {"id": "rel_trip_02", "title": "특수교육·취약학생 지원 필요 조사", "relation": "preceding_or_parallel", "owner": "담임·특수교사"},
+        {"id": "rel_trip_03", "title": "개인정보 수집·제공 동의서 관리", "relation": "parallel", "owner": "담임"}
+      ],
+      "bottlenecks": ["명단·금액·일정 재입력", "안전·보건 리스크", "정산 증빙 불일치"],
+      "ai_support": ["안전 체크리스트 생성", "안내문 초안 생성", "정산 증빙 정합성 검토"],
+      "human_review_boundaries": ["학생 안전", "개인정보", "예산계약", "최종승인"],
+      "evidence": [
+        {"file_unit_id": "fu_00007865f0bfca70", "title": "2026학년도 현장체험학습 안전교육 자료_공문.pdf", "evidence_type": "public_document", "domains": "현장체험학습;안전보건", "systems": "업무관리", "stages": "계획;안내;심의결재;집행"},
+        {"file_unit_id": "PBS-004", "title": "현장체험학습 기본계획서 작성의 행정업무 부담 시나리오", "evidence_type": "validated_scenario", "domains": "현장체험학습", "systems": "업무관리", "stages": "계획;심의결재"}
+      ]
+    },
+    {
+      "scenario_id": "info_disclosure_request_response",
+      "title": "정보공개 청구 대응",
+      "work_domain": "민원정보공개",
+      "subdomains": ["정보보안", "개인정보보호", "행정민원"],
+      "origin": "locally_authored_phase1",
+      "validation_status": "pending_field_validation",
+      "school_context": {"school_level": ["초등학교", "중학교", "고등학교", "특수학교"], "region": ["전국 공통"], "school_type": ["공립", "사립"]},
+      "keywords": ["정보공개청구", "비공개", "부분공개", "개인정보 마스킹", "회신", "기록보존"],
+      "prompt_examples": ["학교에 정보공개 청구가 들어왔을 때 누가 무엇을 해야 하는지 보고 싶어."],
+      "seed_terms": {"domains": ["민원정보공개", "정보보안"], "related_systems": ["업무관리", "정보공개시스템", "학교홈페이지"], "workflow_stages": ["접수", "자료확인", "공개여부검토", "심의결재", "회신", "기록보존"]},
+      "actors": [
+        {"id": "foi_officer", "name": "정보공개 담당자", "role": "청구 접수, 처리기한 관리, 공개 여부 종합, 회신"},
+        {"id": "record_holder", "name": "자료 보유 담당자", "role": "청구 대상 자료 보유 여부와 원본 확인"},
+        {"id": "admin_office", "name": "행정실", "role": "수수료, 공개 방법, 비용 처리 확인"},
+        {"id": "principal", "name": "학교장·관리자", "role": "공개·비공개·부분공개 결정 결재"}
+      ],
+      "systems": [
+        {"id": "work_management", "name": "업무관리", "functions": ["접수 기안", "검토·협조", "결재", "회신 시행"]},
+        {"id": "foi_system", "name": "정보공개시스템", "functions": ["청구 접수", "처리상태 갱신", "결정통지", "수수료 처리"]},
+        {"id": "homepage", "name": "학교홈페이지", "functions": ["사전정보공표 확인", "공개 안내"]},
+        {"id": "spreadsheet", "name": "스프레드시트", "functions": ["대상 자료 목록", "비공개 사유 정리", "마스킹 체크"]}
+      ],
+      "tasks": [
+        {"id": "foi_t01", "phase": "접수", "title": "청구 접수와 처리기한 확인", "actor_id": "foi_officer", "system_ids": ["foi_system", "work_management"], "inputs": ["청구서", "청구 대상 항목", "청구인 요청 형태"], "outputs": ["접수 기안", "처리기한 메모"], "risk": "medium", "estimated_time": "D+0", "status": "required", "human_review": ["민원", "처리기한 준수"], "overview": "청구 내용을 정확히 해석하고 처리기한(원칙 10일, 연장 가능)을 먼저 확정하는 단계다. 청구 대상이 모호하면 보완요청 여부를 판단한다.", "key_checks": ["청구 대상의 범위와 형식", "처리기한 기산일", "보완요청 필요 여부"]},
+        {"id": "foi_t02", "phase": "자료확인", "title": "보유 자료 확인과 제3자 관련 여부", "actor_id": "record_holder", "system_ids": ["work_management", "spreadsheet"], "inputs": ["청구 항목", "원본 문서", "제3자 정보 포함 여부"], "outputs": ["대상 자료 목록", "제3자 의견청취 필요 표시"], "risk": "high", "estimated_time": "D+1~D+3", "status": "required", "human_review": ["개인정보", "제3자 권리"], "overview": "청구 대상 자료의 실제 보유 여부를 확인하고, 제3자의 개인정보·이해관계가 포함되면 의견청취 대상인지 표시한다.", "key_checks": ["자료 실제 보유 여부", "제3자 정보 포함 여부", "원본·사본 구분"]},
+        {"id": "foi_t03", "phase": "공개여부검토", "title": "비공개·부분공개 사유 검토와 마스킹", "actor_id": "foi_officer", "system_ids": ["work_management", "spreadsheet"], "inputs": ["대상 자료", "비공개 사유 후보", "개인정보 항목"], "outputs": ["공개 여부 검토 의견", "마스킹 처리본"], "risk": "high", "estimated_time": "D+3~D+6", "status": "required", "human_review": ["개인정보", "비공개 사유 적정성", "민원"], "overview": "정보공개법상 비공개 사유 해당 여부를 항목별로 검토하고, 부분공개 시 개인정보를 마스킹한다. 사유 없는 비공개는 분쟁 위험이 크다.", "key_checks": ["비공개 사유의 법적 근거", "부분공개 가능성 우선 검토", "마스킹 누락 여부"]},
+        {"id": "foi_t04", "phase": "심의결재", "title": "결정 결재와 청구인 회신", "actor_id": "principal", "system_ids": ["foi_system", "work_management"], "inputs": ["검토 의견", "마스킹 처리본", "수수료 산정"], "outputs": ["공개 결정통지", "회신 시행문"], "risk": "high", "estimated_time": "D+7~D+10", "status": "required", "human_review": ["최종승인", "민원"], "overview": "공개·부분공개·비공개 결정을 결재받아 청구인에게 통지하고, 불복 시 이의신청·행정심판 안내를 포함한다.", "key_checks": ["결정 유형과 사유 일치", "처리기한 내 통지", "불복 절차 안내 포함"]},
+        {"id": "foi_t05", "phase": "기록보존", "title": "처리 결과 기록과 보존", "actor_id": "foi_officer", "system_ids": ["foi_system", "work_management"], "inputs": ["결정통지", "회신 이력", "처리 대장"], "outputs": ["처리 기록", "보존 묶음"], "risk": "low", "estimated_time": "D+10", "status": "required", "human_review": ["기록 정합성"], "overview": "청구·결정·회신 이력을 대장과 시스템에 남겨 통계와 사후 분쟁 대응에 대비한다.", "key_checks": ["대장과 시스템 상태 일치", "보존 연한 적용"]}
+      ],
+      "edges": [
+        {"source": "foi_t01", "target": "foi_t02", "type": "requires", "label": "보유 확인"},
+        {"source": "foi_t02", "target": "foi_t03", "type": "checks", "label": "공개여부 검토"},
+        {"source": "foi_t03", "target": "foi_t04", "type": "requires", "label": "검토 의견 첨부"},
+        {"source": "foi_t04", "target": "foi_t05", "type": "produces", "label": "회신·기록"},
+        {"source": "foi_officer", "target": "foi_t01", "type": "performs", "label": "담당"},
+        {"source": "principal", "target": "foi_t04", "type": "approves", "label": "결정 결재"}
+      ],
+      "related_work": [
+        {"id": "rel_foi_01", "title": "개인정보 열람·정정 청구 대응", "relation": "parallel", "owner": "개인정보보호 담당자", "linked_task_ids": ["foi_t03"], "link_reason": "개인정보 항목 마스킹·열람 판단이 겹친다."},
+        {"id": "rel_foi_02", "title": "사전정보공표 목록 관리", "relation": "preceding", "owner": "정보공개 담당자", "linked_task_ids": ["foi_t01"], "link_reason": "이미 공표된 정보면 청구 처리 부담이 줄어든다."},
+        {"id": "rel_foi_03", "title": "악성·반복 민원 대응 절차", "relation": "follow_up", "owner": "행정실·관리자", "linked_task_ids": ["foi_t04"], "link_reason": "반복·과도 청구는 별도 민원 대응과 연결된다."}
+      ],
+      "bottlenecks": ["비공개 사유의 법적 근거 확인", "제3자 의견청취로 인한 기한 압박", "마스킹 누락에 따른 개인정보 유출 위험"],
+      "ai_support": [
+        {"title": "비공개 사유 후보 점검표", "description": "청구 항목별로 검토할 비공개 사유 후보와 부분공개 가능성을 정리", "applies_to_task_ids": ["foi_t03"], "expected_input": "대상 자료 목록", "expected_output": "사유 후보 체크리스트", "human_review": "최종 사유 판단은 담당자·관리자"},
+        {"title": "마스킹 누락 점검", "description": "부분공개본에서 개인정보 패턴 미마스킹 의심 위치 표시", "applies_to_task_ids": ["foi_t03"], "expected_input": "부분공개 처리본", "expected_output": "의심 위치 목록", "human_review": "실제 마스킹 여부는 사람이 확인"},
+        {"title": "처리기한·절차 안내 초안", "description": "결정통지에 들어갈 불복 절차·기한 안내 문구 초안", "applies_to_task_ids": ["foi_t04"], "expected_input": "결정 유형", "expected_output": "통지 문구 초안", "human_review": "법적 문구는 담당자 확인"}
+      ],
+      "human_review_boundaries": ["개인정보", "비공개 사유 판단", "제3자 권리", "민원", "최종승인"],
+      "evidence": [
+        {"file_unit_id": "ref_foi_manual", "title": "정보공개 처리 절차 일반 안내(업무 유형)", "evidence_type": "reference_pattern", "domains": "민원정보공개", "systems": "정보공개시스템;업무관리", "stages": "접수;공개여부검토;회신"},
+        {"file_unit_id": "ref_privacy_masking", "title": "부분공개 시 개인정보 마스킹 점검(업무 유형)", "evidence_type": "reference_pattern", "domains": "민원정보공개;정보보안", "systems": "업무관리", "stages": "공개여부검토"}
+      ]
+    },
+    {
+      "scenario_id": "afterschool_care_settlement",
+      "title": "방과후학교·돌봄 정산",
+      "work_domain": "방과후돌봄",
+      "subdomains": ["예산계약", "회계", "개인정보보호"],
+      "origin": "locally_authored_phase1",
+      "validation_status": "pending_field_validation",
+      "school_context": {"school_level": ["초등학교", "중학교"], "region": ["전국 공통"], "school_type": ["공립", "사립"]},
+      "keywords": ["방과후학교", "돌봄", "강사료", "수강료", "정산", "수요조사"],
+      "prompt_examples": ["방과후학교 강사료와 수강료 정산 업무 흐름을 보고 싶어."],
+      "seed_terms": {"domains": ["방과후돌봄", "예산계약"], "related_systems": ["업무관리", "K-에듀파인", "스프레드시트", "학교홈페이지"], "workflow_stages": ["수요조사", "개설결정", "수강신청", "운영", "정산", "보고"]},
+      "actors": [
+        {"id": "afterschool_teacher", "name": "방과후·돌봄 담당교사", "role": "수요조사, 프로그램 개설, 수강·출결 관리, 정산 자료 수합"},
+        {"id": "instructor", "name": "외부 강사", "role": "강의, 출결 제출, 강사료 청구 자료 제출"},
+        {"id": "admin_office", "name": "행정실", "role": "강사 계약, 강사료·수강료 회계 처리"},
+        {"id": "principal", "name": "학교장", "role": "개설·예산·정산 승인"}
+      ],
+      "systems": [
+        {"id": "work_management", "name": "업무관리", "functions": ["계획 기안", "결재", "결과 보고"]},
+        {"id": "edufine", "name": "K-에듀파인", "functions": ["강사료 지출", "수강료 세입·세출", "정산 증빙"]},
+        {"id": "spreadsheet", "name": "스프레드시트", "functions": ["수요·수강 명단", "출결 집계", "정산 금액 계산"]},
+        {"id": "homepage", "name": "학교홈페이지", "functions": ["프로그램 안내", "수강 신청 안내", "결과 공유"]}
+      ],
+      "tasks": [
+        {"id": "as_t01", "phase": "수요조사", "title": "수요조사와 프로그램 개설 계획", "actor_id": "afterschool_teacher", "system_ids": ["work_management", "homepage", "spreadsheet"], "inputs": ["전년 운영 결과", "학생·학부모 수요", "강사 풀"], "outputs": ["개설 계획", "프로그램 목록"], "risk": "low", "estimated_time": "D-30", "status": "required", "human_review": ["예산 적정성"], "overview": "수요조사 결과로 개설 프로그램과 예상 수강 인원을 정하고 예산 규모를 가늠한다. 수요와 강사 수급이 맞지 않으면 개설을 조정한다.", "key_checks": ["수요 대비 개설 적정성", "강사 수급 가능성", "예상 수강료·강사료 규모"]},
+        {"id": "as_t02", "phase": "운영", "title": "강사 계약과 수강신청 처리", "actor_id": "admin_office", "system_ids": ["edufine", "work_management", "spreadsheet"], "inputs": ["강사 위촉 자료", "수강 신청서", "수강료 기준"], "outputs": ["강사 계약", "수강 명단", "수납 내역"], "risk": "medium", "estimated_time": "D-14", "status": "required", "human_review": ["예산계약", "개인정보"], "overview": "강사 위촉·계약과 수강 신청·수납을 처리한다. 수강생 개인정보와 수납 내역의 정확성이 정산 기초가 된다.", "key_checks": ["계약 조건과 강사료 단가", "수강료 수납 정합성", "개인정보 수집 동의"]},
+        {"id": "as_t03", "phase": "정산", "title": "출결 기반 강사료·수강료 정산", "actor_id": "afterschool_teacher", "system_ids": ["spreadsheet", "edufine"], "inputs": ["출결 기록", "강사료 청구", "환불 요청"], "outputs": ["정산 내역", "환불 처리표"], "risk": "high", "estimated_time": "월말", "status": "required", "human_review": ["예산계약", "환불 정확성"], "overview": "출결 기록을 근거로 강사료와 수강료(중도 환불 포함)를 정산한다. 출결·결석·환불 처리 불일치가 가장 흔한 정산 오류다.", "key_checks": ["출결과 강사료 시수 일치", "중도 환불 기준 적용", "미납·과오납 확인"]},
+        {"id": "as_t04", "phase": "보고", "title": "지출 결재와 운영 결과 보고", "actor_id": "principal", "system_ids": ["edufine", "work_management"], "inputs": ["정산 내역", "지출 증빙", "운영 결과"], "outputs": ["지출 결재", "운영 결과 보고"], "risk": "high", "estimated_time": "월초", "status": "required", "human_review": ["최종승인", "예산계약"], "overview": "정산 결과를 결재하고 운영 결과를 보고한다. 증빙과 정산 내역의 금액·일자·대상이 일치해야 한다.", "key_checks": ["증빙과 정산 금액 일치", "지출 항목 적정성", "결과 보고 기한"]}
+      ],
+      "edges": [
+        {"source": "as_t01", "target": "as_t02", "type": "produces", "label": "개설 후 계약"},
+        {"source": "as_t02", "target": "as_t03", "type": "requires", "label": "명단·수납 확정"},
+        {"source": "as_t03", "target": "as_t04", "type": "produces", "label": "정산 근거"},
+        {"source": "afterschool_teacher", "target": "as_t03", "type": "performs", "label": "담당"},
+        {"source": "admin_office", "target": "as_t02", "type": "performs", "label": "담당"}
+      ],
+      "related_work": [
+        {"id": "rel_as_01", "title": "강사 인력풀·범죄경력 조회 관리", "relation": "preceding", "owner": "방과후 담당교사", "linked_task_ids": ["as_t02"], "link_reason": "강사 계약 전 자격·결격 확인이 선행되어야 한다."},
+        {"id": "rel_as_02", "title": "수익자부담경비 회계 처리", "relation": "parallel", "owner": "행정실", "linked_task_ids": ["as_t03"], "link_reason": "수강료는 수익자부담경비로 별도 회계 처리된다."},
+        {"id": "rel_as_03", "title": "돌봄교실 간식·물품 구매", "relation": "parallel", "owner": "돌봄 담당자", "linked_task_ids": ["as_t04"], "link_reason": "돌봄 운영비 지출이 같은 정산 주기에 묶인다."}
+      ],
+      "bottlenecks": ["출결과 강사료 시수 불일치", "중도 환불 기준 해석", "수강료 미납·과오납 정리"],
+      "ai_support": [
+        {"title": "출결-강사료 정합성 점검", "description": "출결 집계와 강사료 청구 시수의 차이를 표시", "applies_to_task_ids": ["as_t03"], "expected_input": "출결표·강사료 청구", "expected_output": "차이 목록", "human_review": "최종 정산 금액은 담당자 확인"},
+        {"title": "환불 산정 초안", "description": "중도 포기·결석 기준에 따른 환불액 초안 계산", "applies_to_task_ids": ["as_t03"], "expected_input": "수강·출결·환불 요청", "expected_output": "환불 초안표", "human_review": "환불 기준 적용은 담당자 확인"},
+        {"title": "정산-증빙 정합성 점검", "description": "정산 내역과 지출 증빙의 금액·일자·대상 일치 점검", "applies_to_task_ids": ["as_t04"], "expected_input": "정산 내역·증빙", "expected_output": "불일치 항목", "human_review": "지출 결재는 관리자"}
+      ],
+      "human_review_boundaries": ["예산계약", "개인정보", "환불 정확성", "최종승인"],
+      "evidence": [
+        {"file_unit_id": "ref_afterschool_ops", "title": "방과후학교 운영·정산 절차(업무 유형)", "evidence_type": "reference_pattern", "domains": "방과후돌봄;예산계약", "systems": "K-에듀파인;업무관리", "stages": "운영;정산;보고"},
+        {"file_unit_id": "ref_fee_account", "title": "수익자부담경비 회계 처리(업무 유형)", "evidence_type": "reference_pattern", "domains": "예산계약", "systems": "K-에듀파인", "stages": "정산"}
+      ]
+    },
+    {
+      "scenario_id": "facility_safety_inspection",
+      "title": "학교 시설 안전점검",
+      "work_domain": "안전보건",
+      "subdomains": ["시설관리", "예산계약"],
+      "origin": "locally_authored_phase1",
+      "validation_status": "pending_field_validation",
+      "school_context": {"school_level": ["초등학교", "중학교", "고등학교", "특수학교"], "region": ["전국 공통"], "school_type": ["공립", "사립"]},
+      "keywords": ["안전점검", "시설", "결함", "보수", "위험성평가", "기록보존"],
+      "prompt_examples": ["학교 시설 안전점검과 결함 조치 흐름을 보고 싶어."],
+      "seed_terms": {"domains": ["안전보건", "시설관리"], "related_systems": ["업무관리", "교육시설통합정보망", "K-에듀파인", "스프레드시트"], "workflow_stages": ["계획", "점검", "결함조치", "보고", "기록보존"]},
+      "actors": [
+        {"id": "safety_manager", "name": "안전·시설 담당자", "role": "점검 계획, 점검 실시, 결함 정리, 조치 확인"},
+        {"id": "admin_office", "name": "행정실", "role": "보수 계약·지출, 외부 점검 용역 처리"},
+        {"id": "inspector", "name": "외부 점검·보수 업체", "role": "전문 점검, 결함 진단, 보수 시공"},
+        {"id": "principal", "name": "학교장", "role": "위험 우선순위, 예산, 조치 승인"}
+      ],
+      "systems": [
+        {"id": "work_management", "name": "업무관리", "functions": ["점검 계획 기안", "결재", "결과 보고"]},
+        {"id": "facility_net", "name": "교육시설통합정보망", "functions": ["시설 이력", "점검 결과 등록", "하자·보수 연계"]},
+        {"id": "edufine", "name": "K-에듀파인", "functions": ["보수 품의", "계약", "지출"]},
+        {"id": "spreadsheet", "name": "스프레드시트", "functions": ["점검 체크리스트", "결함 목록", "조치 현황"]}
+      ],
+      "tasks": [
+        {"id": "fs_t01", "phase": "계획", "title": "점검 계획과 대상·주기 확인", "actor_id": "safety_manager", "system_ids": ["work_management", "spreadsheet"], "inputs": ["법정 점검 주기", "시설 목록", "전기·가스·소방 등 분야"], "outputs": ["점검 계획", "대상 체크리스트"], "risk": "medium", "estimated_time": "학기초/분기", "status": "required", "human_review": ["학생 안전", "법정 주기 준수"], "overview": "법정 점검 주기와 대상 시설을 정리해 점검 계획을 세운다. 전문 분야(전기·가스·소방·승강기 등)는 외부 용역 대상인지 구분한다.", "key_checks": ["법정 점검 항목 누락 여부", "자체점검·전문점검 구분", "점검 일정의 수업 영향"]},
+        {"id": "fs_t02", "phase": "점검", "title": "점검 실시와 결함 기록", "actor_id": "inspector", "system_ids": ["facility_net", "spreadsheet"], "inputs": ["점검 체크리스트", "현장 상태", "사용자 신고"], "outputs": ["점검 결과", "결함 목록", "위험도 등급"], "risk": "high", "estimated_time": "점검일", "status": "required", "human_review": ["학생 안전", "위험도 판단"], "overview": "현장 점검으로 결함을 진단하고 위험도 등급을 부여한다. 즉시 위험은 사용 제한 등 긴급 조치가 선행되어야 한다.", "key_checks": ["즉시 위험 결함 식별", "위험도 등급의 근거", "사진·기록 확보"]},
+        {"id": "fs_t03", "phase": "결함조치", "title": "보수 우선순위와 계약·시공", "actor_id": "admin_office", "system_ids": ["edufine", "work_management", "facility_net"], "inputs": ["결함 목록", "보수 견적", "예산"], "outputs": ["보수 품의·계약", "조치 결과"], "risk": "high", "estimated_time": "D+7~D+30", "status": "required", "human_review": ["예산계약", "학생 안전", "최종승인"], "overview": "위험도와 예산을 고려해 보수 우선순위를 정하고 계약·시공한다. 예산 부족 시 임시 안전조치와 상위기관 지원 요청을 함께 검토한다.", "key_checks": ["위험도 기반 우선순위", "임시 안전조치 여부", "계약·검수 적정성"]},
+        {"id": "fs_t04", "phase": "보고", "title": "결과 보고와 이력 등록·보존", "actor_id": "safety_manager", "system_ids": ["facility_net", "work_management"], "inputs": ["점검 결과", "조치 내역", "검수 자료"], "outputs": ["결과 보고", "시설 이력 등록"], "risk": "medium", "estimated_time": "조치 후", "status": "required", "human_review": ["기록 정합성", "미조치 이월 관리"], "overview": "점검·조치 결과를 보고하고 시설 이력에 등록해 다음 점검과 연계한다. 미조치 결함은 이월 관리 대상으로 명확히 남긴다.", "key_checks": ["미조치 결함 이월 표시", "이력 등록 완전성", "재점검 필요 항목"]}
+      ],
+      "edges": [
+        {"source": "fs_t01", "target": "fs_t02", "type": "produces", "label": "점검 실시"},
+        {"source": "fs_t02", "target": "fs_t03", "type": "requires", "label": "결함 기반 조치"},
+        {"source": "fs_t03", "target": "fs_t04", "type": "produces", "label": "조치 후 보고"},
+        {"source": "safety_manager", "target": "fs_t01", "type": "performs", "label": "담당"},
+        {"source": "admin_office", "target": "fs_t03", "type": "performs", "label": "담당"}
+      ],
+      "related_work": [
+        {"id": "rel_fs_01", "title": "전기·가스·소방·승강기 법정검사", "relation": "parallel", "owner": "안전·시설 담당자", "linked_task_ids": ["fs_t01"], "link_reason": "전문 분야는 별도 법정검사 주기와 자격업체가 필요하다."},
+        {"id": "rel_fs_02", "title": "위험성평가 및 안전관리계획", "relation": "preceding_or_parallel", "owner": "안전보건 담당자", "linked_task_ids": ["fs_t02"], "link_reason": "위험성평가 결과가 점검 항목·우선순위에 반영된다."},
+        {"id": "rel_fs_03", "title": "시설 개선 예산 요구·교부 신청", "relation": "follow_up", "owner": "행정실", "linked_task_ids": ["fs_t03"], "link_reason": "대규모 보수는 상위기관 예산 지원과 연결된다."}
+      ],
+      "bottlenecks": ["즉시 위험 결함의 긴급 조치 지연", "보수 예산 부족", "미조치 결함 이월 누락"],
+      "ai_support": [
+        {"title": "법정 점검 항목 체크리스트", "description": "시설 유형별 법정 점검 항목과 주기 점검표 생성", "applies_to_task_ids": ["fs_t01"], "expected_input": "시설 목록", "expected_output": "점검 체크리스트", "human_review": "법정 항목 최종 확인은 담당자"},
+        {"title": "결함 위험도 정리", "description": "결함 목록을 위험도·긴급도로 분류해 우선순위 초안 제시", "applies_to_task_ids": ["fs_t02", "fs_t03"], "expected_input": "결함 목록", "expected_output": "우선순위 초안", "human_review": "안전 판단·사용 제한은 사람이 결정"},
+        {"title": "조치 이력 정합성 점검", "description": "조치 내역과 이력 등록의 누락·불일치 표시", "applies_to_task_ids": ["fs_t04"], "expected_input": "조치 내역·이력", "expected_output": "누락 목록", "human_review": "이력 확정은 담당자"}
+      ],
+      "human_review_boundaries": ["학생 안전", "위험도 판단", "예산계약", "최종승인"],
+      "evidence": [
+        {"file_unit_id": "ref_safety_inspection", "title": "학교 시설 안전점검·결함조치 절차(업무 유형)", "evidence_type": "reference_pattern", "domains": "안전보건;시설관리", "systems": "교육시설통합정보망;업무관리", "stages": "계획;점검;결함조치;기록보존"},
+        {"file_unit_id": "ref_risk_assessment", "title": "위험성평가 및 안전관리계획(업무 유형)", "evidence_type": "reference_pattern", "domains": "안전보건", "systems": "업무관리", "stages": "계획;점검"}
+      ]
+    },
+    {
+      "scenario_id": "school_violence_case_handling",
+      "title": "학교폭력 사안 처리",
+      "work_domain": "학교폭력",
+      "subdomains": ["생활교육", "상담", "개인정보보호"],
+      "origin": "locally_authored_phase1",
+      "validation_status": "pending_field_validation",
+      "sensitivity_note": "민감 사안 프로세스 안내용. 실제 사안의 판단·조치·심의 권한은 책임교사·관리자·심의기구에 있으며 본 사례는 의사결정 도구가 아니다.",
+      "school_context": {"school_level": ["초등학교", "중학교", "고등학교"], "region": ["전국 공통"], "school_type": ["공립", "사립"]},
+      "keywords": ["학교폭력", "사안처리", "초기대응", "보호자통지", "심의", "조치이행"],
+      "prompt_examples": ["학교폭력 사안 처리의 일반 절차와 담당자 역할을 보고 싶어."],
+      "seed_terms": {"domains": ["학교폭력", "생활교육"], "related_systems": ["업무관리", "NEIS", "스프레드시트"], "workflow_stages": ["인지접수", "초기대응", "사안조사", "통지", "심의연계", "조치이행", "기록관리"]},
+      "actors": [
+        {"id": "responsible_teacher", "name": "학교폭력 책임교사", "role": "사안 접수, 조사, 절차 관리, 기관 연계"},
+        {"id": "homeroom", "name": "담임교사", "role": "초기 인지, 학생 보호, 보호자 소통 지원"},
+        {"id": "counselor", "name": "전문상담교사", "role": "관련 학생 심리 지원, 2차 피해 방지"},
+        {"id": "principal", "name": "학교장·관리자", "role": "긴급조치 결정, 절차 적정성, 기관 보고 승인"}
+      ],
+      "systems": [
+        {"id": "work_management", "name": "업무관리", "functions": ["접수·보고 기안", "결재", "기관 연계 시행"]},
+        {"id": "neis", "name": "NEIS", "functions": ["조치사항 관리(권한 범위)", "학적·생활기록 연계"]},
+        {"id": "spreadsheet", "name": "스프레드시트", "functions": ["사안 경과 기록", "통지·일정 관리"]}
+      ],
+      "tasks": [
+        {"id": "sv_t01", "phase": "인지접수", "title": "사안 인지와 접수", "actor_id": "responsible_teacher", "system_ids": ["work_management", "spreadsheet"], "inputs": ["신고·인지 경위", "관련 학생 확인"], "outputs": ["접수 기록", "초기 경위 메모"], "risk": "high", "estimated_time": "D+0", "status": "required", "human_review": ["학생 안전", "개인정보", "2차 피해 방지"], "overview": "신고·목격·상담 등으로 사안을 인지하면 즉시 접수하고 경위를 기록한다. 관련 학생의 신원·정보는 최소 인원만 접근하도록 보호한다.", "key_checks": ["접수 누락·지연 여부", "정보 접근 최소화", "긴급성 판단"]},
+        {"id": "sv_t02", "phase": "초기대응", "title": "긴급조치와 피해학생 보호", "actor_id": "principal", "system_ids": ["work_management"], "inputs": ["사안 위급도", "분리 필요 여부", "상담 필요"], "outputs": ["긴급조치 기록", "보호·분리 조치"], "risk": "high", "estimated_time": "D+0~D+1", "status": "required", "human_review": ["학생 안전", "최종승인", "2차 피해 방지"], "overview": "피해학생 보호를 최우선으로 필요한 긴급조치(분리, 보호, 상담 연계)를 결정한다. 조치는 관리자 권한으로 신속히 이뤄져야 한다.", "key_checks": ["피해학생 보호 우선", "가·피해 분리 필요성", "상담 연계 여부"]},
+        {"id": "sv_t03", "phase": "사안조사", "title": "사안 조사와 보호자 통지", "actor_id": "responsible_teacher", "system_ids": ["work_management", "spreadsheet"], "inputs": ["관련 학생·목격 진술", "객관 자료", "보호자 연락처"], "outputs": ["조사 기록", "보호자 통지 이력"], "risk": "high", "estimated_time": "D+1~D+7", "status": "required", "human_review": ["개인정보", "공정성", "2차 피해 방지"], "overview": "관련 학생과 보호자에게 통지하고 진술·자료를 객관적으로 수집한다. 조사 과정에서 편향·2차 피해가 생기지 않도록 절차를 지킨다.", "key_checks": ["양측 통지·진술 기회", "기록의 객관성", "비밀 유지"]},
+        {"id": "sv_t04", "phase": "심의연계", "title": "심의기구 연계와 결과 처리", "actor_id": "responsible_teacher", "system_ids": ["work_management", "neis"], "inputs": ["조사 결과", "사안 경중", "관련 규정"], "outputs": ["심의 요청 또는 학교장 종결 기록", "결과 통지"], "risk": "high", "estimated_time": "절차에 따름", "status": "required", "human_review": ["심의 권한 경계", "최종승인", "개인정보"], "overview": "사안 경중과 요건에 따라 학교장 자체 종결 또는 교육지원청 심의기구 연계 여부를 처리한다. 조치 결정 권한은 심의기구·관리자에 있다.", "key_checks": ["자체종결 요건 충족 여부", "심의 연계 적정성", "결과 통지·불복 안내"]},
+        {"id": "sv_t05", "phase": "조치이행", "title": "조치 이행과 기록 관리", "actor_id": "counselor", "system_ids": ["neis", "work_management"], "inputs": ["결정된 조치", "지원 계획", "관계 회복 프로그램"], "outputs": ["조치 이행 기록", "사후 지원 기록"], "risk": "high", "estimated_time": "결정 후", "status": "required", "human_review": ["학생 안전", "개인정보", "기록 권한"], "overview": "결정된 조치와 사후 지원(상담·관계회복)을 이행하고 기록한다. 생활기록 기재 등은 권한·규정 범위 안에서만 처리한다.", "key_checks": ["조치 이행 여부 추적", "사후 지원 지속성", "기재 권한·규정 준수"]}
+      ],
+      "edges": [
+        {"source": "sv_t01", "target": "sv_t02", "type": "escalates_to", "label": "긴급조치"},
+        {"source": "sv_t02", "target": "sv_t03", "type": "requires", "label": "조사 착수"},
+        {"source": "sv_t03", "target": "sv_t04", "type": "requires", "label": "심의 판단"},
+        {"source": "sv_t04", "target": "sv_t05", "type": "produces", "label": "조치 이행"},
+        {"source": "responsible_teacher", "target": "sv_t03", "type": "performs", "label": "담당"},
+        {"source": "principal", "target": "sv_t02", "type": "approves", "label": "긴급조치 결정"}
+      ],
+      "related_work": [
+        {"id": "rel_sv_01", "title": "피해·관련 학생 심리상담 지원", "relation": "parallel", "owner": "전문상담교사", "linked_task_ids": ["sv_t02", "sv_t05"], "link_reason": "초기부터 사후까지 심리 지원이 병행되어야 한다."},
+        {"id": "rel_sv_02", "title": "교육지원청 심의기구 운영 연계", "relation": "follow_up", "owner": "책임교사", "linked_task_ids": ["sv_t04"], "link_reason": "조치 결정은 외부 심의기구 권한과 연결된다."},
+        {"id": "rel_sv_03", "title": "사안 기록 보안·접근권한 관리", "relation": "parallel", "owner": "책임교사·관리자", "linked_task_ids": ["sv_t01", "sv_t05"], "link_reason": "민감 기록의 접근 최소화와 보존이 전 과정에 걸린다."}
+      ],
+      "bottlenecks": ["피해학생 보호와 조사 신속성의 균형", "보호자 소통 갈등", "자체종결·심의연계 요건 판단"],
+      "ai_support": [
+        {"title": "절차 단계 체크리스트", "description": "사안 처리 단계별 해야 할 절차와 통지 항목 점검표(일반 절차 안내)", "applies_to_task_ids": ["sv_t01", "sv_t03"], "expected_input": "현재 단계", "expected_output": "절차 체크리스트", "human_review": "사안 판단·조치는 책임교사·관리자·심의기구"},
+        {"title": "통지·기록 문구 초안", "description": "보호자 통지·경과 기록의 형식 초안(개인정보 제외)", "applies_to_task_ids": ["sv_t03"], "expected_input": "통지 대상·단계", "expected_output": "형식 초안", "human_review": "내용·발송은 담당자 확인"},
+        {"title": "사후 지원 일정 관리", "description": "상담·관계회복 등 사후 지원 일정 리마인드", "applies_to_task_ids": ["sv_t05"], "expected_input": "지원 계획", "expected_output": "일정 알림", "human_review": "지원 내용은 상담교사 판단"}
+      ],
+      "human_review_boundaries": ["학생 안전", "개인정보", "2차 피해 방지", "심의·조치 권한", "최종승인"],
+      "evidence": [
+        {"file_unit_id": "ref_sv_procedure", "title": "학교폭력 사안 처리 절차 일반 안내(업무 유형)", "evidence_type": "reference_pattern", "domains": "학교폭력;생활교육", "systems": "업무관리", "stages": "인지접수;초기대응;사안조사;심의연계;조치이행"},
+        {"file_unit_id": "ref_sv_record", "title": "사안 기록 보안·접근권한 관리(업무 유형)", "evidence_type": "reference_pattern", "domains": "학교폭력;정보보안", "systems": "업무관리", "stages": "기록관리"}
+      ]
+    }
+  ]
+}
