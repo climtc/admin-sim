@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>학교 행정업무 프로세스 시뮬레이터</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="app-logo">
+        <strong>학교 행정업무 시뮬레이터</strong>
+        <span>Evidence-driven workflow simulator</span>
+      </div>
+      <form id="generationTool" class="gen-bar gen-secondary" aria-label="사례 생성(준비용)" onsubmit="return false">
+        <span class="gen-tag">사례 생성 · 준비용</span>
+        <input id="taskTitleInput" class="gen-title" type="text" value="학교 영상정보처리기기(CCTV) 재설치" placeholder="업무 제목" aria-label="업무 제목">
+        <select id="promptExampleSelect" class="gen-select" aria-label="추천 예시">
+          <option value="">추천 예시…</option>
+        </select>
+        <textarea id="promptInput" class="gen-prompt" rows="2" aria-label="업무 프롬프트" placeholder="생성할 업무 프롬프트를 입력하세요">학교 안에 있는 CCTV를 재설치하는 업무 프로세스를 시뮬레이션해줘. 담당자별 해야 할 일, 관련 업무, 시스템 기능, 개인정보와 계약 리스크까지 보고 싶어.</textarea>
+        <button id="simulateButton" class="primary-button gen-submit" type="button">생성하기</button>
+        <span class="gen-note" id="genNote" hidden></span>
+      </form>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <main class="workspace">
+      <section id="projectOverview" class="project-overview" aria-label="프로젝트 개요">
+        <div class="project-copy">
+          <p class="eyebrow">PoC research project</p>
+          <h2>교사 행정업무 발생 구조를 조사하기 위한 시뮬레이션 도구</h2>
+          <p>
+            이 프로젝트는 학교에서 어떤 행정업무가 발생하고, 그 업무가 왜 발생하며, 누가 담당하는지를 조사하기 위한 사전 단계 연구입니다.
+            교육부, 교육청, 학교 등에서 발생한 행정문서 중 인터넷에 공개되어 있는 문서를 기초 자료로 삼아 행정업무 흐름을 시뮬레이션합니다.
+            궁극적으로 교사의 행정업무 경감이라는 정책 목표를 위한 기초 자원 수집과 현장 검증 데이터를 축적하는 것을 목표로 합니다.
+          </p>
+          <p class="project-owner">연구 책임: 임완철(경상국립대, 국가인공지능전략위원회 교육인재분과, climtc@gmail.com)</p>
+        </div>
+        <dl class="project-data">
+          <div><dt>데이터 기준</dt><dd>2026-05-29.v1</dd></div>
+          <div><dt>공개 문서 단위</dt><dd>20,692</dd></div>
+          <div><dt>텍스트 분석 가능</dt><dd>15,788</dd></div>
+          <div><dt>매뉴얼 후보</dt><dd>1,641</dd></div>
+        </dl>
+      </section>
+
+      <nav class="top-nav" aria-label="PoC 메뉴">
+        <button class="nav-button active" type="button" data-page="simulator">
+          <span class="nav-step">01</span>
+          <strong>검토·평가</strong>
+          <small>업무 프로세스를 보며 같은 화면에서 평가</small>
+        </button>
+        <button class="nav-button" type="button" data-page="review">
+          <span class="nav-step">02</span>
+          <strong>저장 목록</strong>
+          <small>저장된 결과·사례 선택과 관리</small>
+        </button>
+      </nav>
+
+      <div id="simulatorPage" class="page-view active">
+      <section id="caseLibrary" class="case-bar" hidden>
+        <h2>업무 사례</h2>
+        <div id="caseLibraryList" class="case-lib-list"></div>
+        <span id="evalProgress" class="eval-progress" aria-live="polite"></span>
+      </section>
+      <section id="reviewReturnBar" class="review-return-bar" hidden>
+        <div>
+          <span>평가 검증 중</span>
+          <strong id="reviewReturnTitle">저장된 생성 결과</strong>
+        </div>
+        <div class="review-return-actions">
+          <button id="reviewReturnButton" class="fit-button" type="button">평가로 돌아가기</button>
+          <button id="reviewReturnCloseButton" class="icon-button" type="button" title="평가 맥락 닫기">×</button>
+        </div>
+      </section>
+
+      <section id="generatedResult" class="result-header" aria-label="시뮬레이션 요약">
+        <div>
+          <p class="eyebrow" id="matchLabel">조건 기반 매칭</p>
+          <h2 id="scenarioTitle">학교 영상정보처리기기(CCTV) 재설치</h2>
+          <p id="scenarioSubtitle">정보보안, 안전보건, 예산계약이 동시에 걸리는 복합 업무입니다.</p>
+        </div>
+        <div class="score-card-group">
+          <div class="score-card score-card--engine">
+            <span>생성에 사용된 엔진</span>
+            <strong id="scoreValue">Claude</strong>
+          </div>
+          <div class="score-card">
+            <span>검토 필요 지점</span>
+            <strong id="boundaryCount">5</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="insight-grid" aria-label="핵심 결과">
+        <article>
+          <span>주 담당 후보</span>
+          <strong id="ownerSummary">개인정보보호 담당자, 안전·시설 담당자, 행정실</strong>
+        </article>
+        <article>
+          <span>연결 시스템</span>
+          <strong id="systemSummary">업무관리, K-에듀파인, 학교홈페이지</strong>
+        </article>
+        <article>
+          <span>검토 필요 지점</span>
+          <strong id="boundarySummary">개인정보, 학생 안전, 예산계약</strong>
+        </article>
+      </section>
+
+      <div class="work-split">
+        <div class="work-main">
+          <section class="simulation-brief" aria-label="생성 결과">
+            <div>
+              <span>로컬 실행 모드</span>
+              <strong id="simulationBriefTitle">생성 결과가 여기에 표시됩니다.</strong>
+            </div>
+            <p id="simulationBriefText">생성 버튼을 누르면 로컬 브리지 서버가 프롬프트를 전달하고, 생성 결과를 이 화면에 표시합니다.</p>
+            <div id="simulationSignals" class="signal-row"></div>
+          </section>
+
+          <section class="main-grid">
+            <div class="left-stack">
+              <section class="module">
+                <div class="module-head">
+                  <h2>담당자 업무 프로세스</h2>
+                  <div class="viz-controls">
+                    <div class="zoom-controls" aria-label="그래프 확대 축소">
+                      <button class="icon-button" id="zoomOutButton" type="button" title="축소">-</button>
+                      <span id="zoomValue" class="zoom-value">40%</span>
+                      <button class="icon-button" id="zoomInButton" type="button" title="확대">+</button>
+                      <button class="fit-button" id="zoomFitButton" type="button">맞춤</button>
+                    </div>
+                    <div class="view-tabs" role="tablist" aria-label="시각화 전환">
+                      <button class="tab-button active" type="button" data-view="graph">그래프</button>
+                      <button class="tab-button" type="button" data-view="timeline">타임라인</button>
+                      <button class="tab-button" type="button" data-view="matrix">매트릭스</button>
+                      <button class="tab-button" type="button" data-view="evidence">근거</button>
+                    </div>
+                  </div>
+                </div>
+                <div id="visualization" class="visualization" aria-live="polite"></div>
+              </section>
+
+              <section class="module">
+                <div class="module-head">
+                  <h2>관련 업무 연결</h2>
+                </div>
+                <div id="relatedWork" class="related-list"></div>
+              </section>
+            </div>
+
+            <aside class="detail-panel" aria-label="선택 업무 상세">
+              <div class="module-head">
+                <h2>선택 업무 상세</h2>
+              </div>
+              <div id="taskDetail"></div>
+            </aside>
+          </section>
+        </div>
+
+        <aside class="work-eval module" aria-label="이 업무 평가">
+          <div class="module-head">
+            <h2>이 업무 평가</h2>
+          </div>
+          <div id="inlineReviewForm" class="review-detail-body"></div>
+        </aside>
+      </div>
+      </div>
+
+      <section id="reviewPage" class="page-view review-page" aria-label="저장 목록과 평가">
+        <div class="review-layout">
+          <section class="module">
+            <div class="module-head">
+              <h2>저장된 결과·사례</h2>
+              <div class="module-head-actions">
+                <button id="exportCasesButton" class="fit-button" type="button" hidden>배포용 내보내기</button>
+                <button id="clearSavedButton" class="fit-button" type="button">전체 삭제</button>
+              </div>
+            </div>
+            <div id="savedResultList" class="saved-result-list"></div>
+          </section>
+
+          <section class="module review-detail">
+            <div class="module-head">
+              <h2>선택 항목</h2>
+              <button id="loadSavedButton" class="fit-button" type="button">검토·평가 화면 열기</button>
+            </div>
+            <div id="reviewDetail" class="review-detail-body"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="onboarding" class="onboarding-overlay" hidden>
+    <div class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="onboardTitle">
+      <p class="eyebrow">현장 검증</p>
+      <h2 id="onboardTitle">현직 선생님의 3분 평가가 이 도구를 현실에 맞게 만듭니다</h2>
+      <p>등록된 행정업무 사례를 보고, 실제 학교 현장과 얼마나 비슷한지 평가해 주세요. 왼쪽에서 사례를 고르고 → 업무 흐름을 살펴본 뒤 → 오른쪽에서 바로 평가하면 됩니다.</p>
+      <label>
+        평가자 역할 (선택)
+        <input id="onboardRole" type="text" placeholder="예: 초등 교무부장, 행정업무 담당 교사">
+      </label>
+      <div class="onboarding-actions">
+        <button id="onboardStart" class="primary-button compact-button" type="button">평가 시작</button>
+        <button id="onboardSkip" class="fit-button" type="button">건너뛰기</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./research_config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
