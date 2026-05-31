@@ -1,17 +1,17 @@
 const FALLBACK_DATA = {
   version: "2026-05-29.mvp1",
   domain_catalog: [
-    {name: "안전보건", source_count: 4433, status: "hub_available_pending_scenario"},
-    {name: "현장체험학습", source_count: 4122, status: "scenario_ready"},
-    {name: "교육과정", source_count: 3796, status: "hub_available_pending_scenario"},
-    {name: "예산계약", source_count: 3598, status: "hub_available_pending_scenario"},
-    {name: "인사복무", source_count: 2792, status: "hub_available_pending_scenario"},
-    {name: "교무학사", source_count: 1286, status: "hub_available_pending_scenario"},
-    {name: "정보보안", source_count: 1232, status: "scenario_ready"},
-    {name: "학교폭력", source_count: 1181, status: "hub_available_pending_scenario"},
-    {name: "방과후돌봄", source_count: 961, status: "hub_available_pending_scenario"},
-    {name: "생활교육", source_count: 802, status: "hub_available_pending_scenario"},
-    {name: "민원정보공개", source_count: 204, status: "hub_available_pending_scenario"}
+    {name: "현장체험학습", source_count: 3209, status: "scenario_ready"},
+    {name: "예산계약", source_count: 1462, status: "hub_available_pending_scenario"},
+    {name: "안전보건", source_count: 1370, status: "hub_available_pending_scenario"},
+    {name: "교육과정", source_count: 1152, status: "hub_available_pending_scenario"},
+    {name: "인사복무", source_count: 835, status: "hub_available_pending_scenario"},
+    {name: "학교폭력", source_count: 713, status: "hub_available_pending_scenario"},
+    {name: "방과후돌봄", source_count: 518, status: "hub_available_pending_scenario"},
+    {name: "정보보안", source_count: 450, status: "scenario_ready"},
+    {name: "교무학사", source_count: 412, status: "hub_available_pending_scenario"},
+    {name: "생활교육", source_count: 128, status: "hub_available_pending_scenario"},
+    {name: "민원정보공개", source_count: 37, status: "hub_available_pending_scenario"}
   ],
   recommended_prompts: [
     {
@@ -125,6 +125,8 @@ const CODEX_ENDPOINT = API_BASE
     : "http://127.0.0.1:8765/api/simulate");
 // 1차 검증(Phase 1): 웹에서 직접 생성하지 않고 사전 생성·검수된 사례를 열람·평가한다.
 const PHASE1 = Boolean(window.SIMULATOR_PHASE1);
+// Google Apps Script 서빙 모드: 저장은 google.script.run, 시나리오는 인라인 전역(window.__SCENARIOS__).
+const GAS_MODE = Boolean(window.GAS_MODE);
 const APP_VERSION = "poc-0.4";
 const SAVED_RESULTS_KEY = "adminSimulatorSavedResults.v1";
 const USED_EXAMPLES_KEY = "adminSimulatorUsedExamples.v1";
@@ -199,6 +201,8 @@ function getResearchSessionId() {
 }
 
 function getResearchEndpoint() {
+  // Google Apps Script 모드: google.script.run 경로 사용(가짜 sentinel로 큐 활성화).
+  if (GAS_MODE) return "gas://saveEvaluation";
   // Worker 프록시가 설정되어 있으면 GitHub 커밋 저장 엔드포인트를 우선 사용한다.
   if (API_BASE) return `${API_BASE}/api/store`;
   return String(window.RESEARCH_SUBMISSION_ENDPOINT || localStorage.getItem(RESEARCH_ENDPOINT_KEY) || "").trim();
@@ -229,8 +233,13 @@ function saveResearchOutbox(outbox) {
 function buildResearchUnit(eventType, source) {
   const resultId = source.result_id || source.id || makeId("result");
   const evaluation = source.evaluation || null;
+  // D-2 통합 스키마: 생성 엔진(사례 출처)과 평가가 들어온 배포 채널을 함께 기록 → 엔진·채널 교차 비교.
+  const sourceEngine = (source.scenario && source.scenario.source_engine) || "unknown";
+  const deploymentChannel = GAS_MODE ? "google" : (API_BASE ? "github" : "local");
   return {
-    schema_version: "1.0",
+    schema_version: "poc-2026-05",
+    source_engine: sourceEngine,
+    deployment_channel: deploymentChannel,
     app_version: APP_VERSION,
     event_id: makeId("event"),
     event_type: eventType,
@@ -295,7 +304,35 @@ function queueResearchEvent(eventType, source) {
   return unit;
 }
 
+// Google Apps Script 모드: google.script.run으로 시트에 저장(콜백 기반, CORS 없음).
+function transmitViaGas() {
+  if (!(window.google && window.google.script && window.google.script.run)) return;
+  const outbox = getResearchOutbox();
+  let changed = false;
+  outbox.forEach((item) => {
+    if (item.status === "sent" || item.status === "sending") return;
+    item.status = "sending";
+    item.attempts = Number(item.attempts || 0) + 1;
+    changed = true;
+    window.google.script.run
+      .withSuccessHandler(() => {
+        const ob = getResearchOutbox();
+        const it = ob.find((x) => x.id === item.id);
+        if (it) { it.status = "sent"; it.sent_at = new Date().toISOString(); it.last_error = ""; saveResearchOutbox(ob); }
+        renderEvalResults();
+      })
+      .withFailureHandler((err) => {
+        const ob = getResearchOutbox();
+        const it = ob.find((x) => x.id === item.id);
+        if (it) { it.status = "pending"; it.last_error = String((err && err.message) || err); saveResearchOutbox(ob); }
+      })
+      .saveEvaluation(item.payload);
+  });
+  if (changed) saveResearchOutbox(outbox);
+}
+
 async function transmitResearchOutbox() {
+  if (GAS_MODE) { transmitViaGas(); return; }
   const endpoint = getResearchEndpoint();
   if (!endpoint) return;
   const outbox = getResearchOutbox();
@@ -1631,31 +1668,37 @@ function renderInlineEvaluation() {
   }
 }
 
-// 평가 결과 보기(이 브라우저). 정적 사이트는 방문자 간 평가를 자동 합산하지 못한다.
-function renderEvalResults() {
+// 평가 항목 정규화: {title, reviewerRole, scores, updatedAt}
+function evalItemsFromSaved() {
+  return getSavedResults()
+    .filter((s) => s.evaluation && s.evaluation.updatedAt)
+    .map((s) => ({ title: s.title, reviewerRole: s.evaluation.reviewerRole, scores: s.evaluation.scores || {}, updatedAt: s.evaluation.updatedAt }));
+}
+
+function renderResultsTable(items, scopeText, isServer) {
   const host = $("#evalResultsTable");
   if (!host) return;
-  const evaluated = getSavedResults().filter((s) => s.evaluation && s.evaluation.updatedAt);
   const scope = $("#evalResultsScope");
-  if (scope) scope.textContent = `${evaluated.length}건 (이 브라우저 저장)`;
-  if (!evaluated.length) {
-    host.innerHTML = `<p class="empty-note">아직 이 브라우저에서 저장한 평가가 없습니다. 사례를 평가하면 여기에 누적됩니다.</p>`;
+  if (scope) scope.textContent = scopeText;
+  if (!items || !items.length) {
+    host.innerHTML = `<p class="empty-note">아직 저장된 평가가 없습니다. 사례를 평가하면 여기에 누적됩니다.</p>`;
     return;
   }
   const rubric = RUBRIC_ITEMS;
   const colAvg = {};
   rubric.forEach((r) => { colAvg[r.id] = []; });
-  const rows = evaluated.map((s) => {
-    const ev = s.evaluation;
-    const nums = rubric.map((r) => Number(ev.scores?.[r.id])).filter((n) => n > 0);
-    rubric.forEach((r) => { const v = Number(ev.scores?.[r.id]); if (v > 0) colAvg[r.id].push(v); });
+  const rows = items.map((it) => {
+    const scores = it.scores || {};
+    const nums = rubric.map((r) => Number(scores[r.id])).filter((n) => n > 0);
+    rubric.forEach((r) => { const v = Number(scores[r.id]); if (v > 0) colAvg[r.id].push(v); });
     const avg = nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1) : "-";
+    const when = it.updatedAt ? new Date(it.updatedAt).toLocaleString("ko-KR") : "-";
     return `<tr>
-      <td class="er-title">${escapeHtml(s.title)}</td>
-      <td>${escapeHtml(ev.reviewerRole || "-")}</td>
-      ${rubric.map((r) => `<td>${escapeHtml(ev.scores?.[r.id] || "-")}</td>`).join("")}
+      <td class="er-title">${escapeHtml(it.title || "-")}</td>
+      <td>${escapeHtml(it.reviewerRole || "-")}</td>
+      ${rubric.map((r) => `<td>${escapeHtml(String(scores[r.id] || "-"))}</td>`).join("")}
       <td><strong>${avg}</strong></td>
-      <td class="er-time">${escapeHtml(new Date(ev.updatedAt).toLocaleString("ko-KR"))}</td>
+      <td class="er-time">${escapeHtml(when)}</td>
     </tr>`;
   }).join("");
   const avgRow = `<tr class="er-avg">
@@ -1663,6 +1706,9 @@ function renderEvalResults() {
     ${rubric.map((r) => { const a = colAvg[r.id]; return `<td>${a.length ? (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : "-"}</td>`; }).join("")}
     <td></td><td></td>
   </tr>`;
+  const note = isServer
+    ? `이 표는 <strong>모든 참여자의 평가(서버 집계)</strong>입니다. 평가가 저장되면 모두가 같은 결과를 봅니다.`
+    : `이 표는 <strong>이 브라우저에 저장된 평가</strong>입니다. 정적 사이트 특성상 방문자(다른 사람·기기)의 평가는 자동으로 합산·표시되지 않습니다. 전체 공유·합산은 별도 저장 백엔드가 필요합니다.`;
   host.innerHTML = `
     <div class="eval-results-scroll">
       <table class="eval-results">
@@ -1674,8 +1720,23 @@ function renderEvalResults() {
         <tbody>${rows}${avgRow}</tbody>
       </table>
     </div>
-    <p class="empty-note">이 표는 <strong>이 브라우저에 저장된 평가</strong>입니다. 정적 사이트 특성상 방문자(다른 사람·기기)의 평가는 자동으로 합산·표시되지 않습니다. 전체 공유·합산은 별도 저장 백엔드가 필요합니다.</p>
+    <p class="empty-note">${note}</p>
   `;
+}
+
+// 평가 결과 보기. 기본은 이 브라우저 저장본. GAS 모드면 서버(시트)에서 전체 집계를 읽어 갱신.
+function renderEvalResults() {
+  if (!$("#evalResultsTable")) return;
+  const local = evalItemsFromSaved();
+  renderResultsTable(local, `${local.length}건 (이 브라우저 저장)`, false);
+  if (GAS_MODE && window.google && window.google.script && window.google.script.run) {
+    window.google.script.run
+      .withSuccessHandler((rows) => {
+        if (Array.isArray(rows)) renderResultsTable(rows, `${rows.length}건 (전체·서버 집계)`, true);
+      })
+      .withFailureHandler(() => { /* 서버 실패 시 로컬 표 유지 */ })
+      .listEvaluations();
+  }
 }
 
 // 저장 목록(02) 페이지: 선택 항목 요약 + 검토·평가 화면 안내(평가 폼은 결과 화면에 인라인)
@@ -2003,11 +2064,16 @@ function exportCasesToJson() {
 }
 
 async function boot() {
-  try {
-    const response = await fetch("./data/scenarios.json");
-    if (response.ok) DATA = await response.json();
-  } catch (error) {
-    DATA = FALLBACK_DATA;
+  if (window.__SCENARIOS__ && Array.isArray(window.__SCENARIOS__.scenarios)) {
+    // GAS(HtmlService) 모드: 시나리오를 인라인 전역으로 받는다(fetch 불가).
+    DATA = window.__SCENARIOS__;
+  } else {
+    try {
+      const response = await fetch("./data/scenarios.json");
+      if (response.ok) DATA = await response.json();
+    } catch (error) {
+      DATA = FALLBACK_DATA;
+    }
   }
   state.scenario = DATA.scenarios[0];
   state.taskId = state.scenario.tasks[0].id;
